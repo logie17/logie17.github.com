@@ -1,0 +1,73 @@
+---
+layout: post
+title: "Abstract thy SQL"
+description: ""
+category: programming
+tags: [Perl Database]
+---
+{% include JB/setup %}
+Let's take a break from [Moose](http://www.moose.org). Change gears and
+visit a topic that I believe every web developer will have to grapple
+with at some point or another - integrating
+[SQL](http://en.wikipedia.org/wiki/SQL) with a web application. However, the
+problem is the SQL itself tends to dominate the application.
+Often times it begins quite innocuously; a developer creates a module that fetches some data
+from a database and updates it.
+
+Below is an example of a standard insert and select statements using the
+ubiquitious [DBI](https://metacpan.org/module/DBI) module:
+
+    my $sth = $dbh->prepare("select columny from tablex where id = ?");
+    $sth->execute(1);
+
+    $dbh->do("insert
+                into tablex (a,b)
+                values (?,?)", undef ,(1,2) );
+
+We have more than one problem in this example. Not only do we have to manage
+Perl, but we have to now manage the new embedded
+[DSL](http://en.wikipedia.org/wiki/Domain-specific_language) known as SQL.
+As the story unfolds with any code base, what begins as a small application soon grows to thousands of lines of
+code complicated by various modules that interact with multiple aspects of the database. The
+once beautiful Perl code base now contains about 40% embedded SQL. The code base becomes
+fragile and further the database itself is now deeply coupled with
+the code itself. Because of these two issues it is now difficult to do any
+upgrades on either the database or the code.
+
+## The solution
+
+Now that we have a clear understanding of the problem, how do we go about
+solving it? First, let's imagine a world where SQL doesn't exist, but all
+interactions with the database are handled with [Perl](http://www.perl.org) data structures!
+Let's dream of a day of when we can create SQL statements without having to write a single bit of SQL.
+Well, this is a reality and it can be reached with [SQL::Abstract.](https://metacpan.org/module/SQL::Abstract)
+
+Here are two simple examples of the same SQL above example, demonstrated using
+SQL::Abstract.
+
+    my ($stmt, @bind) = $sql->select('tablex',
+        [ 'columny' ],
+        { id => 1 });
+    $sth->prepare($stmt);
+    $sth->execute(@binds);
+
+    my($stmt, @binds) = $sql->insert('tablex', {
+        a => 1,
+        b => 2
+    });
+    $dbh->do($stmt,undef,@binds);
+
+As mentioned, the advantages of using SQL::Abstract are: no more SQL,
+cleaner code, and a lower risk of error. SQL::Abstract will generate the
+needed SQL and the associated bound variables for the place holders - it
+works seamlessly with any exsting DBI calls.
+
+# Wrap up
+
+[SQL::Abstract](https://metacpan.org/module/SQL::Abstract) is a well-documented
+library that will go a long way in improving the quality of maintainable
+code. However, there are a few shortcomings to SQL::Abstract - it is
+lightweight and doesn't support many other advanced SQL statements
+such as "grouping" or "having." However, for the majority of SQL
+queries, it will work just fine. So have fun and stop polluting the code
+with embedded SQL!

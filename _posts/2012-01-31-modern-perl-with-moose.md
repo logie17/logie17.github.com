@@ -1,0 +1,120 @@
+---
+layout: post
+title: "Modern Perl With Moose"
+description: ""
+category: programming
+tags: [Perl, Moose, ModernPerl]
+---
+{% include JB/setup %}
+[Moose](http://www.moose.org) is an object system for Perl. What this means
+is that it offers a more declarative syntax to make object oriented
+programming both easier and powerful.
+[Moose](https://metacpan.org/module/Moose)
+incorporates many ideas from the [Perl
+6](http://dev.perl.org/perl6/doc/design/apo/A12.html) object model and also includes
+interesting concepts from other languages as well. The two exciting things
+that Moose offers a developer are more syntactical sugar and the power of
+[introspection.](http://en.wikipedia.org/wiki/Type_introspection#Perl)
+
+## The old way
+
+Now let's consider the old way of building a class in
+[Perl](http://www.perl.org) with a simple
+getter/setter method.
+
+    package Cat;
+    use base qw(Animal Mammal);
+
+    sub is_alive {
+        my ($self, $bool) = @_;
+        return $bool ? $self->{is_alive} = $bool : $self->{is_alive};
+    }
+
+    sub new {
+        my ( $class, %params ) = @_;
+
+        my $self = ref $class || $class;
+
+        return bless {}, $self;
+    }
+
+    1;
+
+Notice how there is a lot of very perlish idiomatic code that goes into place to
+make object oriented programming possible. Consider the practices of: "blessing" a hashref,
+getting $self from the special @_ array, setting $self to a ref of $class,
+copious amounts of code for a simple setter/getter, and even multiple inheritance! Sheesh, no
+wonder so many people tend to think of Perl as a
+[haxor](http://en.wikipedia.org/wiki/Haxor#Haxor_and_suxxor_.28suxorz.29) script language!
+However, to Perl's credit (although it depends on one's perspective), the primary
+reason for some of this eccentricity is due largely to the fact that object
+oriented Perl was bolted on as an afterthought. It was not part of the core construct of
+the original language.  Thankfully much thought and work has gone into Moose
+which addresses many of these shortcomings. Let's take a look at two key
+upgrades that Moose offers - both the sugar and the introspection.
+
+## Examples of sugar
+
+As mentioned Moose comes equipped with some syntactic sweetness that
+makes object oriented programming in Perl a much richer experience. Below is
+the same code example but using the much cleaner Moose semantics.
+
+    package Cat;
+    use Moose;
+
+    extends 'Animal';    # No longer use base
+    with 'Mammal';       # Introduction of roles
+
+    has 'is_alive' => ( # Supports attributes
+        is  => 'rw',
+        isa => 'Bool'
+    );
+
+    no Moose;
+    __PACKAGE__->meta->make_immutable;
+
+Notice that Moose supports attributes, roles, and makes inheritance much
+cleaner.
+
+## Examples of introspection
+
+Now one of the most powerful features of Moose is the tools it gives a
+programmer for introspection. All of this self reflection is brought to Moose
+by the [MOP.](https://metacpan.org/module/Class::MOP)  Below are a couple examples
+on how to iterate over class's known methods and attributes.
+
+    package Cat;
+    use Moose;
+
+    my $meta = __PACKAGE__->meta;
+
+    for my $attr ($meta->get_all_attributes ) {
+        print $attr->name,"\n";
+    }
+
+    for my $method ( $meta->get_all_methods ) {
+        print $method->fully_qualified_name, "\n";
+    }
+
+    $meta->add_method( 'meow' => sub { print "meow\n" } );
+
+    ...
+
+Having this at one's fingertips makes it easier to dynamically create classes, inspect them,
+add methods, and not feel like one is partaking in any sort of medieval
+wizardry.
+
+The ability to do this sort of introspection was not possible unless
+the programmer was confident and comfortable hacking Perl's symbol table. As I
+mentioned the MOP comes with a whole hosts of powerful meta methods to modify
+classes and objects at run time.
+
+## Where to go from here
+
+Perl is is nearly 25 years old and it's still a very active and rich
+programming language, as demonstrated in by the vastness of
+[CPAN.](http://www.cpan.org) The canonical source for more information
+regarding Moose is the CPAN tutorial or check out the [project page.](http://www.moose.org)
+Further, more examples of Moose and how to use it can be found in the official Moose [documentation.](https://metacpan.org/module/Moose::Manual)
+
+So download Moose and start programming with style!
