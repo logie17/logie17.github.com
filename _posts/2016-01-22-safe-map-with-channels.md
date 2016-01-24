@@ -1,9 +1,9 @@
 ---
 layout: post
-title: "new post"
-description: ""
-category: 
-tags: []
+title: "Go Concurrency Part 2"
+description: "Go Concurrency"
+category: programming
+tags: [Go Golang Blogging Books Writing 2016 Concurrency]
 ---
 {% include JB/setup %}
 ### Safe Map With Channels
