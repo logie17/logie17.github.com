@@ -31,7 +31,6 @@ are guaranteed to be synchronized a map can be safely updated.
 
 Below is a very simple example of channels in conjunction with a go routine.
 
-```
        m := make(chan int)
         go func() {
                 for num := range m {
@@ -44,17 +43,14 @@ Below is a very simple example of channels in conjunction with a go routine.
         m <- 2
         m <- 3
 
-```
 
 The above, albeit trite, piece of code will always print in order of what is put on the channel. The output
 will be:
 
-```
         1
         2
         3
 
-```
 
 So let's extend this idea to make a safe map. The key to implementing is to spin up a parallel
 go routine that will listen to updates on a channel and safely perform operations on a map. Once again,
@@ -62,7 +58,6 @@ this is safe because channels guarantee synchronization.
 
 Let's take a look at the following code example:
 
-```
         type safeMap chan commandData
         func NewSafeMap() safeMap {
            m := make(safeMap)
@@ -81,7 +76,6 @@ Let's take a look at the following code example:
 
             }
         }
-```
 
 From the example above we create a safeMap type, which is just a channel. Next, we
 build a constructor that does two things: 1) it initializes the channel and 2) calls the method "run"
@@ -99,7 +93,6 @@ supported action, insert, which is designated by the numeric "1".  So every time
 method is called it pushes data into a channel. The other side of the channel is listening
 within the "run" go routine that will save the data into a key/value map.
 
-```
         type commandData struct {
             action int
             key string
@@ -110,23 +103,19 @@ within the "run" go routine that will save the data into a key/value map.
             m <- commandData{action: 1, key: key, value : value }
         }
 
-```
 
 #### Are there other actions?
 
 The next obvious action we could add is delete. Let's create a new method called
 "delete" that will accept a key and delete the value.
 
-```
         func (m safeMap) Delete(key string) interface{} {
                 m <- commandData{action: 2, key: key }
         }
 
-```
 
 Next we will need to modify the "run" method to support the new delete action:
 
-```
     func (m safeMap) run() {
         store := make(map[string]interface{})
 
@@ -141,21 +130,24 @@ Next we will need to modify the "run" method to support the new delete action:
         }
     }
 
-```
 
 So now all together, we can call our new safeMap the following ways:
 
-```
         m := NewSafeMap()
 
         m.Insert("foo","bar")
 
         m.Delete("foo")
 
-```
 
 #### Where do we go now?
 
 In the next blog post I would like to demonstrate how we can receive data
 back from a go routine that is running in parallel. This sort of pattern
 will prove useful if we want to retrieve value from our safeMap.
+
+#### References
+
+* The inspiration for this pattern was originally originated from the book
+["Programming in
+Go"](http://www.amazon.com/Programming-Go-Creating-Applications-Developers/dp/0321774639/ref=sr_1_1?ie=UTF8&qid=1453612458&sr=8-1&keywords=Programming+in+go) by Mark Summerfield
