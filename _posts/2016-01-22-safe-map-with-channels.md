@@ -148,6 +148,6 @@ will prove useful if we want to retrieve value from our safeMap.
 
 #### References
 
-* The inspiration for this pattern was originally originated from the book
+* The inspiration and this pattern originated from the book
 ["Programming in
 Go"](http://www.amazon.com/Programming-Go-Creating-Applications-Developers/dp/0321774639/ref=sr_1_1?ie=UTF8&qid=1453612458&sr=8-1&keywords=Programming+in+go) by Mark Summerfield
