@@ -1,0 +1,81 @@
+---
+layout: post
+title: "Go Concurrency Part 3"
+description: "Go Concurrency"
+category: programming
+tags: [Go Golang Blogging Books Writing 2016 Concurrency]
+---
+{% include JB/setup %}
+### Where we have come thus far
+
+In the previous posts we have created a safe map with "sync" and then
+started exploring how this could be done with channels and go routines.
+Where we left off in the last post was with a program that allowed a programmer to
+insert and delete data into the the safemap. For this post I'd like to explore
+how we could utilize channels to read data from the safe hash.
+
+#### Review what the channels are doing
+
+From the previous post we were running a concurrent go routine that would listen
+to a channel and safely insert or delete data from a map. First recall, channels
+enforce synchronicity and for praciticality sake just a queuing mechanism that can
+tie concurrent go routines together and funnel data in order safely.
+
+#### How do we send data back via channels?
+
+Now, in order to safely read from that map we need to add a new action to signify
+that we want to read the data. This new action will essentially send back what data
+it finds in the map and send it over the reply channel. The go routine will now look
+like the following:
+
+    func (m safeMap) run() {
+        store := make(map[string]interface{})
+
+        for command := range m {
+            switch command.action {
+                case 1:
+                    store[command.key] = command.value
+                case 2:
+                    delete(store, command.key)
+                case 3:
+                    command.reply <- store[command.key]
+                    close(command.reply)
+            }
+
+        }
+    }
+
+The read action is now synchronized correctly. We can initialize this reply channel
+through the commandData struct in the following way:
+
+    type commandData struct {
+        action int
+        key string
+        value interface{}
+        reply chan interface{}
+    }
+
+Next we will create a Get method to send the command to receive data. Next the
+Get method will block until a reply comes back through the channel.
+
+    func (m safeMap) Get(key string) interface{} {
+        reply := make(chan interface{})
+        m <- commandData{action: 3, key: key, reply: reply }
+        return <-reply
+    }
+
+And in practice the safemap can be called in the following way:
+
+        m := NewSafeMap()
+
+        m.Insert("foo","bar")
+        fmt.Println(m.Get("foo"))
+        m.Delete("foo")
+
+#### In Summary
+
+As we can see we can create all the standard actions to make a map operate
+safely in a concurrent environment purely with channels. Albeit, for such a simple
+structure as a map, utilizing "sync" maybe the most pragmatic solution. 
+
+For next week we will explore a new pattern that is quite popular: The Fan-In.
