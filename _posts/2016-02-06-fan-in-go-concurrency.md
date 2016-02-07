@@ -17,14 +17,14 @@ tactic is often called
 
 A very common application is to have multiple go routines or workers processes operate on some
 data and then merge that data into a single channel, this is a "fan-in".  There are two practical
-approaches when writing fan-in code. One way is to have a shared channel that is shared among parallel
-go routines; they will send data to the channel. The alternate approach or practice is each in parallel
-routine writes to its own channel, later another routine will merge channels into a unified channel
-for processing. We will briefly explore each approach.
+approaches when writing fan-in code. One way is to have a channel that is shared among parallel
+go routines; the routines will send data to this channel. The alternate approach or practice is that
+each parallel routine writes to its own channel with the expectation that another routine will merge
+the channels for processing. We will briefly explore each approach.
 
 #### Let's fan out and get started
 
-I mean fan-in, so let's pretend we have an array of interesting Mark Twain quotes that that we want to
+I actually mean fan-in, so let's pretend we have an array of interesting Mark Twain quotes that that we want to
 process randomly:
 
         var twainQuotes = []string {
@@ -128,11 +128,10 @@ modified from the aforementioned pipelines article.
             return out
         }
 
-Each of these go routines push data back into a shared channel, "out" that is ultimately returned from merge. In
-the example we create an "output" function which passes in a channel from the slice of channels passed into the 
-"merge" function. The code creates a go routine for each passed in channel which channels all the data into the 
-shared "out" channel. Finally, "out" is returned and can also be ranged over to output any data that has been yoked
-into it. 
+Each of these go routines push data back into a shared channel "out". In the example we create an "output" function
+which receives a channel from the slice of channels passed into the "merge" function. The example creates a go routine
+for each channel in the slice. The go routine ranges over the channel and pipes its output to the shared channel "out".
+Finally, "out" is returned and is later ranged over in the main routine to output the merged data.
 
 #### Neat, but is there more?
 
